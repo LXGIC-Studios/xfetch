@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import { SessionManager } from '../lib/auth/session.js';
-import { extractCookies, getAvailableBrowsers, createSessionFromTokens } from '../lib/auth/cookies.js';
+import { extractCookies, getAvailableBrowsers, createSessionFromTokens, getBrowserProfiles, type BrowserType } from '../lib/auth/cookies.js';
 
 export function registerAuthCommands(program: Command): void {
   const auth = program

@@ -1,24 +1,29 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
-import { getClient, outputResult } from './shared.js';
+import { getClient, outputResult, executePaginated, type PaginatedCommandOptions } from './shared.js';
 
 export function registerTimelineCommands(program: Command): void {
   program
     .command('home')
     .description('Get home timeline')
-    .option('-n, --count <count>', 'Number of results', '20')
+    .option('-n, --count <count>', 'Number of results per page', '20')
     .option('--following', 'Chronological following timeline')
     .option('--cursor <cursor>', 'Pagination cursor')
-    .action(async (options, command) => {
-      const client = await getClient(command.parent?.opts());
+    .option('--all', 'Fetch all pages')
+    .option('--max-pages <pages>', 'Maximum pages to fetch')
+    .option('--resume <file>', 'Resume file for cursor state')
+    .option('--delay <ms>', 'Delay between pages', '1000')
+    .action(async (options: PaginatedCommandOptions & { following?: boolean }, command) => {
+      const globalOpts = command.parent?.opts() || {};
+      const client = await getClient(globalOpts);
       
       try {
+        const count = parseInt(options.count || '20');
         const fetchFn = options.following
-          ? client.getHomeLatestTimeline.bind(client)
-          : client.getHomeTimeline.bind(client);
-        
-        const result = await fetchFn(parseInt(options.count), options.cursor);
-        outputResult(result, command.parent?.opts());
+          ? (cursor?: string) => client.getHomeLatestTimeline(count, cursor)
+          : (cursor?: string) => client.getHomeTimeline(count, cursor);
+
+        await executePaginated(fetchFn, options, globalOpts);
       } catch (error: any) {
         console.error(chalk.red(`Error: ${error.message}`));
         process.exit(1);
@@ -28,15 +33,24 @@ export function registerTimelineCommands(program: Command): void {
   program
     .command('bookmarks')
     .description('Get your bookmarks')
-    .option('-n, --count <count>', 'Number of results', '20')
+    .option('-n, --count <count>', 'Number of results per page', '20')
     .option('--cursor <cursor>', 'Pagination cursor')
     .option('--all', 'Fetch all pages')
-    .action(async (options, command) => {
-      const client = await getClient(command.parent?.opts());
+    .option('--max-pages <pages>', 'Maximum pages to fetch')
+    .option('--resume <file>', 'Resume file for cursor state')
+    .option('--delay <ms>', 'Delay between pages', '1000')
+    .action(async (options: PaginatedCommandOptions, command) => {
+      const globalOpts = command.parent?.opts() || {};
+      const client = await getClient(globalOpts);
       
       try {
-        const result = await client.getBookmarks(parseInt(options.count), options.cursor);
-        outputResult(result, command.parent?.opts());
+        const count = parseInt(options.count || '20');
+
+        await executePaginated(
+          (cursor) => client.getBookmarks(count, cursor),
+          options,
+          globalOpts
+        );
       } catch (error: any) {
         console.error(chalk.red(`Error: ${error.message}`));
         process.exit(1);
@@ -46,16 +60,25 @@ export function registerTimelineCommands(program: Command): void {
   program
     .command('likes <handle>')
     .description('Get user likes')
-    .option('-n, --count <count>', 'Number of results', '20')
+    .option('-n, --count <count>', 'Number of results per page', '20')
     .option('--cursor <cursor>', 'Pagination cursor')
     .option('--all', 'Fetch all pages')
-    .action(async (handle, options, command) => {
-      const client = await getClient(command.parent?.opts());
+    .option('--max-pages <pages>', 'Maximum pages to fetch')
+    .option('--resume <file>', 'Resume file for cursor state')
+    .option('--delay <ms>', 'Delay between pages', '1000')
+    .action(async (handle, options: PaginatedCommandOptions, command) => {
+      const globalOpts = command.parent?.opts() || {};
+      const client = await getClient(globalOpts);
       
       try {
+        const count = parseInt(options.count || '20');
         const user = await client.getUser(handle);
-        const result = await client.getLikes(user.restId, parseInt(options.count), options.cursor);
-        outputResult(result, command.parent?.opts());
+
+        await executePaginated(
+          (cursor) => client.getLikes(user.restId, count, cursor),
+          options,
+          globalOpts
+        );
       } catch (error: any) {
         console.error(chalk.red(`Error: ${error.message}`));
         process.exit(1);

@@ -119,20 +119,57 @@ export class BaseClient {
         this.proxyManager?.markSuccess(currentProxy.url);
       }
 
-    // Update rate limit tracking
-    this.rateLimiter.update(operationName, {
-      limit: parseInt(response.headers['x-rate-limit-limit'] as string) || 0,
-      remaining: parseInt(response.headers['x-rate-limit-remaining'] as string) || 0,
-      reset: parseInt(response.headers['x-rate-limit-reset'] as string) || 0,
-    });
+      // Update rate limit tracking
+      this.rateLimiter.update(operationName, {
+        limit: parseInt(response.headers['x-rate-limit-limit'] as string) || 0,
+        remaining: parseInt(response.headers['x-rate-limit-remaining'] as string) || 0,
+        reset: parseInt(response.headers['x-rate-limit-reset'] as string) || 0,
+      });
 
-    const data = await response.body.json() as GraphQLResponse<T>;
+      const data = await response.body.json() as GraphQLResponse<T>;
 
-    if (data.errors) {
-      throw new Error(`GraphQL Error: ${data.errors.map(e => e.message).join(', ')}`);
+      if (data.errors) {
+        throw new Error(`GraphQL Error: ${data.errors.map(e => e.message).join(', ')}`);
+      }
+
+      return data.data;
+    } catch (error) {
+      // Mark proxy failure and rotate
+      if (currentProxy) {
+        this.proxyManager?.markFailed(currentProxy.url);
+        // Rotate to next proxy
+        this.proxyManager?.getNext();
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Get undici dispatcher (proxy agent if configured, undefined otherwise)
+   */
+  protected getDispatcher(): ProxyAgent | undefined {
+    if (!this.proxyManager?.hasProxies()) {
+      return undefined;
     }
 
-    return data.data;
+    const proxy = this.proxyManager.getNext();
+    if (!proxy) {
+      return undefined;
+    }
+
+    const { uri, auth } = this.proxyManager.formatForUndici(proxy);
+    
+    return new ProxyAgent({
+      uri,
+      token: auth,
+    });
+  }
+
+  /**
+   * Get proxy stats (for debugging)
+   */
+  getProxyStats(): { total: number; available: number; disabled: number } | null {
+    return this.proxyManager?.getStats() || null;
   }
 
   protected sleep(ms: number): Promise<void> {

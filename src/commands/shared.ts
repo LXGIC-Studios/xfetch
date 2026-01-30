@@ -2,19 +2,31 @@ import chalk from 'chalk';
 import { XClient } from '../lib/client/index.js';
 import { SessionManager } from '../lib/auth/session.js';
 import { createSessionFromTokens } from '../lib/auth/cookies.js';
+import { Paginator, createPaginationOptions, type PaginationOptions } from '../lib/pagination.js';
 import { outputJson } from '../lib/output/json.js';
 import { outputJsonl } from '../lib/output/jsonl.js';
 import { outputCsv } from '../lib/output/csv.js';
 import { outputSqlite } from '../lib/output/sqlite.js';
-import type { Session } from '../types/twitter.js';
+import type { Session, PaginatedResult } from '../types/twitter.js';
 
-interface GlobalOptions {
+export interface GlobalOptions {
   authToken?: string;
   ct0?: string;
   format?: string;
   db?: string;
   json?: boolean;
   plain?: boolean;
+  proxy?: string;
+  proxyFile?: string;
+}
+
+export interface PaginatedCommandOptions extends GlobalOptions {
+  all?: boolean;
+  maxPages?: string;
+  resume?: string;
+  delay?: string;
+  count?: string;
+  cursor?: string;
 }
 
 export async function getClient(options: GlobalOptions = {}): Promise<XClient> {
@@ -41,7 +53,49 @@ export async function getClient(options: GlobalOptions = {}): Promise<XClient> {
     process.exit(1);
   }
 
-  return new XClient(session);
+  // Create client with proxy options if provided
+  return new XClient(session, {
+    proxy: options.proxy,
+    proxyFile: options.proxyFile,
+  });
+}
+
+/**
+ * Execute a paginated fetch operation with full pagination support
+ */
+export async function executePaginated<T>(
+  fetchFn: (cursor?: string) => Promise<PaginatedResult<T>>,
+  options: PaginatedCommandOptions,
+  outputOptions: GlobalOptions
+): Promise<void> {
+  const paginationOpts = createPaginationOptions({
+    all: options.all,
+    maxPages: options.maxPages,
+    resume: options.resume,
+    delay: options.delay,
+  });
+
+  // Single page fetch (no pagination flags)
+  if (!options.all && !options.maxPages) {
+    const result = await fetchFn(options.cursor);
+    outputResult(result, outputOptions);
+    return;
+  }
+
+  // Multi-page fetch with pagination
+  const paginator = new Paginator<T>(paginationOpts);
+  
+  const { items, pagesLoaded, complete } = await paginator.fetchAll(
+    (cursor) => fetchFn(cursor || options.cursor)
+  );
+
+  // Output all items
+  outputResult({ 
+    items, 
+    pagesLoaded,
+    complete,
+    totalItems: items.length,
+  }, outputOptions);
 }
 
 export function outputResult(data: unknown, options: GlobalOptions = {}): void {
