@@ -1,5 +1,5 @@
 {
-  "name": "@lxgic/xfetch",
+  "name": "xfetch-cli",
   "version": "0.1.0",
   "description": "Fast X/Twitter CLI scraper. No API keys. Just cookies and go.",
   "type": "module",
