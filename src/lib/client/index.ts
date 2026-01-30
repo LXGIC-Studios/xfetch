@@ -5,6 +5,7 @@ import { SearchMixin } from './search.js';
 import { TimelineMixin } from './timelines.js';
 import { ListMixin } from './lists.js';
 import { DMMixin } from './dms.js';
+import { NotificationsMixin } from './notifications.js';
 import type { Session, ClientOptions } from '../../types/twitter.js';
 
 // Mixin helper
@@ -30,5 +31,5 @@ export class XClient extends BaseClient {
 }
 
 // Apply mixins
-export interface XClient extends UserMixin, TweetMixin, SearchMixin, TimelineMixin, ListMixin, DMMixin {}
-applyMixins(XClient, [UserMixin, TweetMixin, SearchMixin, TimelineMixin, ListMixin, DMMixin]);
+export interface XClient extends UserMixin, TweetMixin, SearchMixin, TimelineMixin, ListMixin, DMMixin, NotificationsMixin {}
+applyMixins(XClient, [UserMixin, TweetMixin, SearchMixin, TimelineMixin, ListMixin, DMMixin, NotificationsMixin]);

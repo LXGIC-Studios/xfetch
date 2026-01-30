@@ -10,6 +10,7 @@ import { registerAuthCommands } from './commands/auth.js';
 import { registerQueryIdCommands } from './commands/query-ids.js';
 import { registerDMCommands } from './commands/dms.js';
 import { registerListCommands } from './commands/lists.js';
+import { registerNotificationCommands } from './commands/notifications.js';
 
 const program = new Command();
 
@@ -40,6 +41,7 @@ registerUserCommands(program);
 registerTweetCommands(program);
 registerSearchCommands(program);
 registerTimelineCommands(program);
+registerNotificationCommands(program);
 registerListCommands(program);
 registerDMCommands(program);
 registerQueryIdCommands(program);
