@@ -1,6 +1,7 @@
-import { request } from 'undici';
+import { request, ProxyAgent, Agent } from 'undici';
 import { QueryIdManager } from '../query-ids/index.js';
 import { RateLimiter } from '../rate-limit.js';
+import { ProxyManager } from '../proxy.js';
 import { generateTransactionId } from '../anti-detect/transaction.js';
 import type { Session, ClientOptions, GraphQLResponse } from '../../types/twitter.js';
 
@@ -11,6 +12,7 @@ export class BaseClient {
   protected session: Session;
   protected queryIds: QueryIdManager;
   protected rateLimiter: RateLimiter;
+  protected proxyManager: ProxyManager | null;
   protected options: ClientOptions;
 
   constructor(session: Session, options: ClientOptions = {}) {
@@ -23,6 +25,11 @@ export class BaseClient {
     };
     this.queryIds = new QueryIdManager();
     this.rateLimiter = new RateLimiter();
+    
+    // Initialize proxy manager if proxy options provided
+    this.proxyManager = (options.proxy || options.proxyFile)
+      ? new ProxyManager({ proxy: options.proxy, proxyFile: options.proxyFile })
+      : null;
   }
 
   protected getHeaders(): Record<string, string> {
@@ -95,11 +102,22 @@ export class BaseClient {
     const headers = this.getHeaders();
     headers['x-client-transaction-id'] = generateTransactionId();
 
-    const response = await request(url.toString(), {
-      method: 'GET',
-      headers,
-      signal: AbortSignal.timeout(this.options.timeoutMs!),
-    });
+    // Get proxy dispatcher if configured
+    const dispatcher = this.getDispatcher();
+    const currentProxy = this.proxyManager?.getCurrent();
+
+    try {
+      const response = await request(url.toString(), {
+        method: 'GET',
+        headers,
+        signal: AbortSignal.timeout(this.options.timeoutMs!),
+        dispatcher,
+      });
+
+      // Mark proxy success
+      if (currentProxy) {
+        this.proxyManager?.markSuccess(currentProxy.url);
+      }
 
     // Update rate limit tracking
     this.rateLimiter.update(operationName, {

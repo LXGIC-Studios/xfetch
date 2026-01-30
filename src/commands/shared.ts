@@ -2,12 +2,17 @@ import chalk from 'chalk';
 import { XClient } from '../lib/client/index.js';
 import { SessionManager } from '../lib/auth/session.js';
 import { createSessionFromTokens } from '../lib/auth/cookies.js';
+import { outputJson } from '../lib/output/json.js';
+import { outputJsonl } from '../lib/output/jsonl.js';
+import { outputCsv } from '../lib/output/csv.js';
+import { outputSqlite } from '../lib/output/sqlite.js';
 import type { Session } from '../types/twitter.js';
 
 interface GlobalOptions {
   authToken?: string;
   ct0?: string;
   format?: string;
+  db?: string;
   json?: boolean;
   plain?: boolean;
 }
@@ -39,28 +44,34 @@ export async function getClient(options: GlobalOptions = {}): Promise<XClient> {
   return new XClient(session);
 }
 
-export function outputResult(data: any, options: GlobalOptions = {}): void {
+export function outputResult(data: unknown, options: GlobalOptions = {}): void {
   const format = options.json ? 'json' : (options.format || 'json');
   
   switch (format) {
     case 'json':
-      console.log(JSON.stringify(data, null, options.plain ? 0 : 2));
+      outputJson(data, { pretty: !options.plain });
       break;
+      
     case 'jsonl':
-      if (Array.isArray(data)) {
-        data.forEach(item => console.log(JSON.stringify(item)));
-      } else if (data.items) {
-        data.items.forEach((item: any) => console.log(JSON.stringify(item)));
-      } else {
-        console.log(JSON.stringify(data));
-      }
+      outputJsonl(data);
       break;
+      
     case 'csv':
-      // TODO: Implement CSV output
-      console.log(JSON.stringify(data, null, 2));
+      outputCsv(data);
       break;
+      
+    case 'sqlite':
+      if (!options.db) {
+        console.error(chalk.red('Error: --db <path> required for SQLite output'));
+        process.exit(1);
+      }
+      const result = outputSqlite(data, { dbPath: options.db });
+      console.error(chalk.green(`✓ Inserted ${result.inserted} records into ${result.tableName} table`));
+      console.error(chalk.dim(`  Database: ${options.db}`));
+      break;
+      
     default:
-      console.log(JSON.stringify(data, null, 2));
+      outputJson(data, { pretty: !options.plain });
   }
 }
 

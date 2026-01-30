@@ -11,6 +11,7 @@ export interface ClientOptions {
   delayMs?: number;
   jitterMs?: number;
   proxy?: string;
+  proxyFile?: string;
 }
 
 // GraphQL response types
