@@ -138,3 +138,43 @@ export interface PaginatedResult<T> {
   cursor?: string;
   hasMore: boolean;
 }
+
+// List types
+export interface TwitterList {
+  id: string;
+  name: string;
+  description?: string;
+  memberCount: number;
+  subscriberCount: number;
+  isPrivate: boolean;
+  createdAt?: string;
+  owner?: {
+    id: string;
+    screenName: string;
+    name: string;
+  };
+}
+
+export interface ListResult {
+  list: {
+    result: {
+      __typename: string;
+      id_str: string;
+      name: string;
+      description?: string;
+      member_count: number;
+      subscriber_count: number;
+      mode: string;
+      created_at?: string;
+      user_results?: {
+        result?: {
+          rest_id: string;
+          legacy: {
+            screen_name: string;
+            name: string;
+          };
+        };
+      };
+    };
+  };
+}

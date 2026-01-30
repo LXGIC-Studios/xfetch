@@ -8,6 +8,8 @@ import { registerSearchCommands } from './commands/search.js';
 import { registerTimelineCommands } from './commands/timeline.js';
 import { registerAuthCommands } from './commands/auth.js';
 import { registerQueryIdCommands } from './commands/query-ids.js';
+import { registerDMCommands } from './commands/dms.js';
+import { registerListCommands } from './commands/lists.js';
 
 const program = new Command();
 
@@ -38,6 +40,8 @@ registerUserCommands(program);
 registerTweetCommands(program);
 registerSearchCommands(program);
 registerTimelineCommands(program);
+registerListCommands(program);
+registerDMCommands(program);
 registerQueryIdCommands(program);
 
 // Parse and execute
