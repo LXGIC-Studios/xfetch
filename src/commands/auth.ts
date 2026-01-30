@@ -76,4 +76,32 @@ export function registerAuthCommands(program: Command): void {
       sessionManager.clear();
       console.log(chalk.green('✓ Authentication cleared'));
     });
+
+  auth
+    .command('browsers')
+    .description('List available browsers and their profiles')
+    .action(async () => {
+      const browsers = getAvailableBrowsers();
+      
+      if (browsers.length === 0) {
+        console.log(chalk.yellow('No supported browsers found'));
+        return;
+      }
+
+      console.log(chalk.blue('Available browsers:\n'));
+      
+      for (const browser of browsers) {
+        const profiles = getBrowserProfiles(browser as BrowserType);
+        console.log(chalk.green(`  ${browser}`));
+        
+        if (profiles.length > 0) {
+          profiles.forEach(p => console.log(chalk.gray(`    - ${p}`)));
+        } else {
+          console.log(chalk.gray('    (no profiles with cookies found)'));
+        }
+        console.log('');
+      }
+      
+      console.log('Usage: xfetch auth extract --browser <browser> --profile <profile>');
+    });
 }
