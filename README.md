@@ -19,17 +19,17 @@
 
 ```bash
 # npm
-npm install -g xfetch
+npm install -g @lxgic/xfetch
 
 # pnpm
-pnpm add -g xfetch
+pnpm add -g @lxgic/xfetch
 
 # bun (recommended)
-bun add -g xfetch
+bun add -g @lxgic/xfetch
 
 # One-shot (no install)
-bunx xfetch tweets @elonmusk
-npx xfetch tweets @elonmusk
+bunx @lxgic/xfetch tweets @elonmusk
+npx @lxgic/xfetch tweets @elonmusk
 ```
 
 ## Quick Start

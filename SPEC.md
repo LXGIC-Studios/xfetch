@@ -215,17 +215,17 @@ Current feature flags included in all requests.
 
 ```bash
 # npm
-npm install -g xfetch
+npm install -g @lxgic/xfetch
 
 # pnpm
-pnpm add -g xfetch
+pnpm add -g @lxgic/xfetch
 
 # bun
-bun add -g xfetch
+bun add -g @lxgic/xfetch
 
 # One-shot (no install)
-bunx xfetch tweets @handle
-npx xfetch tweets @handle
+bunx @lxgic/xfetch tweets @handle
+npx @lxgic/xfetch tweets @handle
 ```
 
 ## Differences from bird
