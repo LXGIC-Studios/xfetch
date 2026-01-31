@@ -85,6 +85,24 @@ export class BaseClient {
       longform_notetweets_rich_text_read_enabled: true,
       longform_notetweets_inline_media_enabled: true,
       responsive_web_enhance_cards_enabled: false,
+      // Added Jan 2026 - X API updates
+      responsive_web_twitter_article_notes_tab_enabled: true,
+      subscriptions_verification_info_verified_since_enabled: true,
+      subscriptions_verification_info_is_identity_verified_enabled: true,
+      highlights_tweets_tab_ui_enabled: true,
+      profile_label_improvements_pcf_label_in_post_enabled: true,
+      hidden_profile_subscriptions_enabled: true,
+      subscriptions_feature_can_gift_premium: true,
+      // Grok features
+      responsive_web_grok_show_grok_translated_post: true,
+      responsive_web_grok_analyze_post_followups_enabled: true,
+      premium_content_api_read_enabled: true,
+      responsive_web_grok_image_annotation_enabled: true,
+      responsive_web_grok_share_attachment_enabled: true,
+      responsive_web_grok_analysis_button_from_backend: true,
+      responsive_web_grok_analyze_button_fetch_trends_enabled: true,
+      rweb_video_screen_enabled: true,
+      responsive_web_jetfuel_frame: true,
     };
 
     const url = new URL(`https://x.com/i/api/graphql/${queryId}/${operationName}`);
