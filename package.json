@@ -1,6 +1,6 @@
 {
   "name": "xfetch-cli",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Fast X/Twitter CLI scraper. No API keys. Just cookies and go.",
   "type": "module",
   "main": "dist/index.js",

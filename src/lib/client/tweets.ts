@@ -159,24 +159,41 @@ export class TweetMixin extends BaseClient {
   }
 
   protected parseTweetList(data: any): PaginatedResult<Tweet> {
-    const instructions = data?.user?.result?.timeline_v2?.timeline?.instructions || [];
-    const entries = instructions
-      .find((i: any) => i.type === 'TimelineAddEntries')
-      ?.entries || [];
-
+    // X API returns timeline (not timeline_v2) for UserTweets
+    const instructions = data?.user?.result?.timeline_v2?.timeline?.instructions 
+      || data?.user?.result?.timeline?.timeline?.instructions 
+      || [];
+    
     const tweets: Tweet[] = [];
     let cursor: string | undefined;
 
-    for (const entry of entries) {
-      if (entry.content?.itemContent?.tweet_results?.result) {
-        try {
-          tweets.push(this.parseTweet(entry.content.itemContent.tweet_results.result));
-        } catch (e) {
-          // Skip unavailable tweets
+    for (const instruction of instructions) {
+      // Handle TimelineAddEntries (main tweets list)
+      if (instruction.type === 'TimelineAddEntries') {
+        for (const entry of instruction.entries || []) {
+          if (entry.content?.itemContent?.tweet_results?.result) {
+            try {
+              tweets.push(this.parseTweet(entry.content.itemContent.tweet_results.result));
+            } catch (e) {
+              // Skip unavailable tweets
+            }
+          }
+          if (entry.content?.cursorType === 'Bottom') {
+            cursor = entry.content.value;
+          }
         }
       }
-      if (entry.content?.cursorType === 'Bottom') {
-        cursor = entry.content.value;
+      
+      // Handle TimelinePinEntry (pinned tweet - single entry)
+      if (instruction.type === 'TimelinePinEntry' && instruction.entry) {
+        const entry = instruction.entry;
+        if (entry.content?.itemContent?.tweet_results?.result) {
+          try {
+            tweets.push(this.parseTweet(entry.content.itemContent.tweet_results.result));
+          } catch (e) {
+            // Skip unavailable tweets
+          }
+        }
       }
     }
 
